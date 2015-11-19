@@ -76,15 +76,17 @@ module.exports = function (Bookshelf) {
 
     destroy: function (opts) {
       if (this.softActivated && !shouldDisable(opts)) {
-        this.set(this.softFields[1], null);
-        this.set(this.softFields[0], new Date());
-        return this.save()
-          .tap(function (model) {
-            return model.triggerThen('destroying', model, opts);
-          })
-          .then(function (model) {
-            return model.triggerThen('destroyed', model, undefined, opts);
-          });
+        var model = this;
+        var softFields = model.softFields;
+        return model.triggerThen('destroying', model, opts)
+        .then(function(){
+          model.set(softFields[1], null);
+          model.set(softFields[0], new Date());
+          return model.save();
+        })
+        .then(function () {
+          return model.triggerThen('destroyed', model, undefined, opts);
+        });
       } else {
         return mProto.destroy.apply(this, arguments);
       }
